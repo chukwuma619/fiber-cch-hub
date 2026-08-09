@@ -1,0 +1,32 @@
+
+
+rpc:
+  listening_addr: "0.0.0.0:8227"
+  enabled_modules:
+    - cch
+
+cch:
+  fiber_rpc_url: "http://fiber:8227"
+
+  # Placeholder LND endpoints — replaced in Stage 2
+  lnd_rpc_url: "https://127.0.0.1:10009"
+  lnd_cert_path: "/fiber/lnd/tls.cert"
+  lnd_macaroon_path: "/fiber/lnd/admin.macaroon"
+
+  # Full wrapped BTC Script JSON (testnet cWBTC)
+  # https://faucet-cwbtc.ckb.dev/guide.html
+  wrapped_btc_type_script: '{"code_hash":"0x25c29dc317811a6f6f3985a7a9ebc4838bd388d19d0feeecf0bcd60f6c0975bb","hash_type":"type","args":"0x9a1086531ed6dc69e0bd44cef5278e03faf3015b31aff60b08fb87663ce8507100000000"}'
+
+  base_fee_sats: 100
+  fee_rate_per_million_sats: 3000
+  order_expiry_delta_seconds: 129600
+  btc_final_tlc_expiry_delta_blocks: 360
+  ckb_final_tlc_expiry_delta_seconds: 216000
+  min_outgoing_invoice_expiry_delta_seconds: 21600
+
+  # Stage 1 only — remove/set false once LND is connected (Stage 2)
+  ignore_startup_failure: true
+
+services:
+  - rpc
+  - cch

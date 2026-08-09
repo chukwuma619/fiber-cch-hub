@@ -1,0 +1,56 @@
+services:
+  fiber:
+    image: ${FIBER_IMAGE:-nervos/fiber:v0.9.0}
+    container_name: fiber-cch-hub-fiber
+    restart: unless-stopped
+    environment:
+      FIBER_SECRET_KEY_PASSWORD: ${FIBER_SECRET_KEY_PASSWORD:?set FIBER_SECRET_KEY_PASSWORD in .env}
+      FIBER_CONFIG: /fiber/config.yml
+      RUST_LOG: ${RUST_LOG:-info,fnn=info}
+    volumes:
+      - ./config/fiber/config.yml:/fiber/config.yml:ro
+      - ./data/fiber:/fiber
+    ports:
+      - "${FIBER_P2P_PORT:-8228}:8228"
+      - "${FIBER_RPC_PORT:-8227}:8227"
+    networks:
+      - hub
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "fnn-cli",
+          "--url",
+          "http://127.0.0.1:8227",
+          "info",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 18
+      start_period: 20s
+
+  cch:
+    image: ${FIBER_IMAGE:-nervos/fiber:v0.9.0}
+    container_name: fiber-cch-hub-cch
+    restart: unless-stopped
+    depends_on:
+      fiber:
+        condition: service_healthy
+    environment:
+      # Entrypoint requires this even for CCH-only processes
+      FIBER_SECRET_KEY_PASSWORD: ${FIBER_SECRET_KEY_PASSWORD:?set FIBER_SECRET_KEY_PASSWORD in .env}
+      FIBER_CONFIG: /fiber/config.yml
+      RUST_LOG: ${RUST_LOG:-info,fnn=info,fnn::cch=debug}
+    volumes:
+      - ./config/cch/config.yml:/fiber/config.yml:ro
+      - ./data/cch:/fiber
+      # Stage 2: mount real LND tls.cert + admin.macaroon here
+      - ./data/cch-lnd:/fiber/lnd:ro
+    ports:
+      - "${CCH_RPC_PORT:-8327}:8227"
+    networks:
+      - hub
+
+networks:
+  hub:
+    name: fiber-cch-hub

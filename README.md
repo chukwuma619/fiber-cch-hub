@@ -5,6 +5,18 @@ A **standalone Cross-Chain Hub (CCH)** for [Fiber Network](https://www.fiber.wor
 This project targets Fiber’s **standalone CCH mode**: the hub runs as its own process and talks to a Fiber Network Node (FNN) over HTTP JSON-RPC and WebSocket, instead of embedding CCH inside the same binary as Fiber.
 
 
+
+**Runtime:** official Docker image [`nervos/fiber:v0.9.0`](https://hub.docker.com/r/nervos/fiber) (see `.env.example`).
+
+### Quick start
+
+```bash
+cp .env.example .env   # set FIBER_SECRET_KEY_PASSWORD
+make stage1            # doctor + bootstrap + up + smoke
+```
+
+Useful targets: `make doctor`, `make up`, `make smoke-stage1`, `make logs`, `make down`.
+
 ---
 
 ## What is CCH?
@@ -19,7 +31,8 @@ Atomicity is enforced by HTLCs on both sides:
 
 Protocol background:
 
-- [Fiber Cross-Chain HTLC docs](https://www.fiber.world/docs/res/cross-chain-htlc)
+- [Cross-Chain HTLC](https://www.fiber.world/docs/res/cross-chain-htlc) (standalone mode)
+- [Module `Cch` RPC](https://www.fiber.world/docs/api-reference/cross-chain/cch)
 - [Payment Channel Cross-Chain Protocol with HTLC](https://github.com/nervosnetwork/fiber/blob/develop/docs/specs/cross-chain-htlc.md) (Fiber repo)
 
 ---
@@ -89,9 +102,14 @@ fee = base_fee_sats + amount * fee_rate_per_million_sats / 1_000_000
 | [Fiber Network Node](https://github.com/nervosnetwork/fiber) (`fnn`) | Channels, invoices, payments on CKB Fiber |
 | Trusted [CKB](https://github.com/nervosnetwork/ckb) RPC | On-chain settlement for the Fiber node |
 | [LND](https://github.com/lightningnetwork/lnd) | Lightning invoices / payments (gRPC + macaroon) |
-| Wrapped BTC UDT on CKB | Asset swapped 1:1 with BTC sats (8 decimal places) |
+| Wrapped BTC UDT on CKB | Testnet **cWBTC** (8 decimals; demo: 1 raw unit = 1 satoshi) |
 
-Testnet tip: get free cWBTC at [faucet-cwbtc.ckb.dev](https://faucet-cwbtc.ckb.dev) — see Fiber [Network Resources](https://www.fiber.world/docs/quick-start/network-resources).
+**Testnet cWBTC**
+
+- Faucet: [faucet-cwbtc.ckb.dev](https://faucet-cwbtc.ckb.dev/)
+- Token + Fiber setup: [cWBTC developer guide](https://faucet-cwbtc.ckb.dev/guide.html)
+- Faucet source: [RetricSu/cwbtc-faucet](https://github.com/RetricSu/cwbtc-faucet)
+- Also mentioned on the [Module `Cch` RPC](https://www.fiber.world/docs/api-reference/cross-chain/cch) page
 
 ---
 
@@ -155,7 +173,7 @@ services:
 
 ## RPC API
 
-CCH exposes three JSON-RPC methods:
+Official schema: [Module `Cch`](https://www.fiber.world/docs/api-reference/cross-chain/cch) (`send_btc`, `receive_btc`, `get_cch_order`).
 
 ### `send_btc`
 
