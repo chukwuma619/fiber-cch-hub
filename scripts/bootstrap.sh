@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Ensure local .env, data dirs, and a CKB key exist for Stage 1 boot.
+# Ensure local .env, data dirs, configs, and a CKB key exist.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -7,14 +7,18 @@ cd "$ROOT"
 
 if [[ ! -f .env ]]; then
   cp .env.example .env
-  echo "Created .env from .env.example — edit FIBER_SECRET_KEY_PASSWORD before production use."
+  echo "Created .env from .env.example — edit secrets before production use."
 fi
 
-mkdir -p data/fiber/ckb data/cch data/cch-lnd
+mkdir -p data/fiber/ckb data/cch data/lnd data/bitcoind
+
+# Sync tracked configs into runtime data dirs (single volume mount per container).
+cp config/fiber/config.yml data/fiber/config.yml
+cp config/cch/config.yml data/cch/config.yml
+cp config/bitcoind/bitcoin.conf data/bitcoind/bitcoin.conf
 
 KEY_PATH="data/fiber/ckb/key"
 if [[ ! -f "$KEY_PATH" ]]; then
-  # 32-byte hex private key without 0x prefix (Fiber/CKB convention)
   if command -v openssl >/dev/null 2>&1; then
     openssl rand -hex 32 >"$KEY_PATH"
   else
@@ -27,8 +31,5 @@ PY
   chmod 600 "$KEY_PATH"
   echo "Generated testnet CKB key at $KEY_PATH (keep private)."
 fi
-
-# Placeholder files so the CCH volume mount exists (Stage 2 replaces with real LND creds)
-touch data/cch-lnd/tls.cert data/cch-lnd/admin.macaroon
 
 echo "Bootstrap complete."

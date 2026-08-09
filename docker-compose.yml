@@ -1,6 +1,6 @@
 services:
   fiber:
-    image: ${FIBER_IMAGE:-nervos/fiber:v0.9.0}
+    image: ${FIBER_IMAGE:-nervos/fiber:0.9.0}
     container_name: fiber-cch-hub-fiber
     restart: unless-stopped
     environment:
@@ -8,49 +8,123 @@ services:
       FIBER_CONFIG: /fiber/config.yml
       RUST_LOG: ${RUST_LOG:-info,fnn=info}
     volumes:
-      - ./config/fiber/config.yml:/fiber/config.yml:ro
       - ./data/fiber:/fiber
     ports:
       - "${FIBER_P2P_PORT:-8228}:8228"
       - "${FIBER_RPC_PORT:-8227}:8227"
     networks:
-      - hub
+      hub:
+        ipv4_address: 172.30.0.10
     healthcheck:
       test:
         [
           "CMD",
           "fnn-cli",
           "--url",
-          "http://127.0.0.1:8227",
+          "http://172.30.0.10:8227",
           "info",
         ]
       interval: 10s
       timeout: 5s
       retries: 18
-      start_period: 20s
+      start_period: 30s
+
+  # Local Bitcoin regtest backend for the hub LND.
+  # For public testnet/mainnet, point CCH at your own LND and drop these services.
+  bitcoind:
+    image: ${BITCOIND_IMAGE:-bitcoin/bitcoin:29}
+    container_name: fiber-cch-hub-bitcoind
+    restart: unless-stopped
+    volumes:
+      - ./data/bitcoind:/home/bitcoin/.bitcoin
+    command:
+      - -printtoconsole
+      - -regtest=1
+      - -server=1
+      - -txindex=1
+      - -rpcuser=fiber
+      - -rpcpassword=fiber
+      - -rpcallowip=172.30.0.0/24
+      - -rpcbind=0.0.0.0
+      - -zmqpubrawblock=tcp://0.0.0.0:28332
+      - -zmqpubrawtx=tcp://0.0.0.0:28333
+      - -fallbackfee=0.0002
+    ports:
+      - "${BITCOIND_RPC_PORT:-18443}:18443"
+    networks:
+      hub:
+        ipv4_address: 172.30.0.5
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "bitcoin-cli",
+          "-regtest",
+          "-rpcuser=fiber",
+          "-rpcpassword=fiber",
+          "getblockchaininfo",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 15s
+
+  lnd:
+    image: ${LND_IMAGE:-lightninglabs/lnd:v0.18.5-beta}
+    container_name: fiber-cch-hub-lnd
+    restart: unless-stopped
+    depends_on:
+      bitcoind:
+        condition: service_healthy
+    volumes:
+      - ./data/lnd:/root/.lnd
+    command:
+      - --lnddir=/root/.lnd
+      - --bitcoin.active
+      - --bitcoin.regtest
+      - --bitcoin.node=bitcoind
+      - --bitcoind.rpchost=172.30.0.5:18443
+      - --bitcoind.rpcuser=fiber
+      - --bitcoind.rpcpass=fiber
+      - --bitcoind.zmqpubrawblock=tcp://172.30.0.5:28332
+      - --bitcoind.zmqpubrawtx=tcp://172.30.0.5:28333
+      - --rpclisten=0.0.0.0:10009
+      - --restlisten=0.0.0.0:8080
+      - --listen=0.0.0.0:9735
+      - --noseedbackup
+      - --accept-keysend
+      - --protocol.wumbo-channels
+    ports:
+      - "${LND_RPC_PORT:-10009}:10009"
+      - "${LND_P2P_PORT:-9735}:9735"
+    networks:
+      hub:
+        ipv4_address: 172.30.0.30
 
   cch:
-    image: ${FIBER_IMAGE:-nervos/fiber:v0.9.0}
+    image: ${FIBER_IMAGE:-nervos/fiber:0.9.0}
     container_name: fiber-cch-hub-cch
     restart: unless-stopped
     depends_on:
       fiber:
         condition: service_healthy
+      lnd:
+        condition: service_started
     environment:
-      # Entrypoint requires this even for CCH-only processes
       FIBER_SECRET_KEY_PASSWORD: ${FIBER_SECRET_KEY_PASSWORD:?set FIBER_SECRET_KEY_PASSWORD in .env}
       FIBER_CONFIG: /fiber/config.yml
       RUST_LOG: ${RUST_LOG:-info,fnn=info,fnn::cch=debug}
     volumes:
-      - ./config/cch/config.yml:/fiber/config.yml:ro
       - ./data/cch:/fiber
-      # Stage 2: mount real LND tls.cert + admin.macaroon here
-      - ./data/cch-lnd:/fiber/lnd:ro
     ports:
       - "${CCH_RPC_PORT:-8327}:8227"
     networks:
-      - hub
+      hub:
+        ipv4_address: 172.30.0.20
 
 networks:
   hub:
     name: fiber-cch-hub
+    ipam:
+      config:
+        - subnet: 172.30.0.0/24

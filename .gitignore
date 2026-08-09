@@ -20,5 +20,3 @@ deps/fiber/
 # Generated
 bin/*
 !bin/.gitkeep
-
-ROADMAP.md

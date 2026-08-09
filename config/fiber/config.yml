@@ -43,8 +43,8 @@ fiber:
             dep_type: code
 
 rpc:
-  # Reachable from sibling containers on the compose network
-  listening_addr: "0.0.0.0:8227"
+  # Private Docker network IP (0.0.0.0 requires biscuit_public_key)
+  listening_addr: "172.30.0.10:8227"
   enabled_modules:
     - channel
     - graph

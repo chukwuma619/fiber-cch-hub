@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Stage 0 doctor: verify Docker + pinned Fiber image.
+# Verify Docker + pinned Fiber image.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -17,7 +17,7 @@ elif [[ -f .env.example ]]; then
   set +a
 fi
 
-IMAGE="${FIBER_IMAGE:-nervos/fiber:v0.9.0}"
+IMAGE="${FIBER_IMAGE:-nervos/fiber:0.9.0}"
 
 fail=0
 check() {
@@ -33,15 +33,33 @@ check() {
 
 check "docker installed" command -v docker >/dev/null
 
-if ! docker info >/dev/null 2>&1; then
+ensure_docker_daemon() {
+  if docker info >/dev/null 2>&1; then
+    return 0
+  fi
+
+  if [[ "$(uname -s)" == "Darwin" ]] && [[ -d /Applications/Docker.app ]]; then
+    echo "INFO Docker daemon down — starting Docker Desktop..."
+    open -a Docker >/dev/null 2>&1 || true
+    local i
+    for i in $(seq 1 90); do
+      if docker info >/dev/null 2>&1; then
+        echo "OK   docker daemon (ready after ${i}s)"
+        return 0
+      fi
+      sleep 2
+    done
+  fi
+
   echo "FAIL docker daemon"
   echo ""
   echo "Docker CLI is installed but the daemon is not reachable."
   echo "Start Docker Desktop (or your engine), then re-run: make doctor"
   echo "Context: $(docker context show 2>/dev/null || echo unknown)"
-  exit 1
-fi
-echo "OK   docker daemon"
+  return 1
+}
+
+ensure_docker_daemon
 check "curl installed" command -v curl >/dev/null
 check "jq installed" command -v jq >/dev/null
 check "compose plugin" docker compose version >/dev/null 2>&1
@@ -62,4 +80,4 @@ if [[ $fail -ne 0 ]]; then
   exit 1
 fi
 
-echo "Doctor passed (Stage 0)."
+echo "Doctor passed."

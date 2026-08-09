@@ -6,16 +6,19 @@ This project targets Fiber’s **standalone CCH mode**: the hub runs as its own 
 
 
 
-**Runtime:** official Docker image [`nervos/fiber:v0.9.0`](https://hub.docker.com/r/nervos/fiber) (see `.env.example`).
+**Runtime:** official Docker image [`nervos/fiber:0.9.0`](https://hub.docker.com/r/nervos/fiber) (see `.env.example`).
 
 ### Quick start
 
 ```bash
-cp .env.example .env   # set FIBER_SECRET_KEY_PASSWORD
-make stage1            # doctor + bootstrap + up + smoke
+cp .env.example .env   # set FIBER_SECRET_KEY_PASSWORD / LND_WALLET_PASSWORD
+make doctor            # optional host check
+make up                # bitcoind + LND + Fiber + standalone CCH
 ```
 
-Useful targets: `make doctor`, `make up`, `make smoke-stage1`, `make logs`, `make down`.
+Useful targets: `make logs`, `make ps`, `make down`, `make pull`.
+
+Default Compose brings up a **local regtest LND** so the hub can start without an external Lightning node. Fiber/CCH are configured for **CKB testnet (Fibt)**. For real swaps, point `config/cch/config.yml` at a Bitcoin testnet (or mainnet) LND whose network matches your Fiber currency, fund cWBTC ([faucet](https://faucet-cwbtc.ckb.dev/)), and open channels.
 
 ---
 
