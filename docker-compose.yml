@@ -29,65 +29,22 @@ services:
       retries: 18
       start_period: 30s
 
-  # Local Bitcoin regtest backend for the hub LND.
-  # For public testnet/mainnet, point CCH at your own LND and drop these services.
-  bitcoind:
-    image: ${BITCOIND_IMAGE:-bitcoin/bitcoin:29}
-    container_name: fiber-cch-hub-bitcoind
-    restart: unless-stopped
-    volumes:
-      - ./data/bitcoind:/home/bitcoin/.bitcoin
-    command:
-      - -printtoconsole
-      - -regtest=1
-      - -server=1
-      - -txindex=1
-      - -rpcuser=fiber
-      - -rpcpassword=fiber
-      - -rpcallowip=172.30.0.0/24
-      - -rpcbind=0.0.0.0
-      - -zmqpubrawblock=tcp://0.0.0.0:28332
-      - -zmqpubrawtx=tcp://0.0.0.0:28333
-      - -fallbackfee=0.0002
-    ports:
-      - "${BITCOIND_RPC_PORT:-18443}:18443"
-    networks:
-      hub:
-        ipv4_address: 172.30.0.5
-    healthcheck:
-      test:
-        [
-          "CMD",
-          "bitcoin-cli",
-          "-regtest",
-          "-rpcuser=fiber",
-          "-rpcpassword=fiber",
-          "getblockchaininfo",
-        ]
-      interval: 5s
-      timeout: 5s
-      retries: 30
-      start_period: 15s
-
+  # Bitcoin testnet LND (Neutrino) — matches Fiber/CCH currency Fibt.
   lnd:
     image: ${LND_IMAGE:-lightninglabs/lnd:v0.18.5-beta}
     container_name: fiber-cch-hub-lnd
     restart: unless-stopped
-    depends_on:
-      bitcoind:
-        condition: service_healthy
     volumes:
       - ./data/lnd:/root/.lnd
     command:
       - --lnddir=/root/.lnd
       - --bitcoin.active
-      - --bitcoin.regtest
-      - --bitcoin.node=bitcoind
-      - --bitcoind.rpchost=172.30.0.5:18443
-      - --bitcoind.rpcuser=fiber
-      - --bitcoind.rpcpass=fiber
-      - --bitcoind.zmqpubrawblock=tcp://172.30.0.5:28332
-      - --bitcoind.zmqpubrawtx=tcp://172.30.0.5:28333
+      - --bitcoin.testnet
+      - --bitcoin.node=neutrino
+      - --neutrino.connect=159.203.125.125:18333
+      - --neutrino.addpeer=lnd.bitrefill.com:18333
+      - --neutrino.addpeer=btcd-testnet.lightning.computer
+      - --feeurl=https://nodes.lightning.computer/fees/v1/btc-fee-estimates.json
       - --rpclisten=0.0.0.0:10009
       - --restlisten=0.0.0.0:8080
       - --listen=0.0.0.0:9735

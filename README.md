@@ -13,12 +13,18 @@ This project targets Fiber’s **standalone CCH mode**: the hub runs as its own 
 ```bash
 cp .env.example .env   # set FIBER_SECRET_KEY_PASSWORD / LND_WALLET_PASSWORD
 make doctor            # optional host check
-make up                # bitcoind + LND + Fiber + standalone CCH
+make up                # Bitcoin testnet LND + Fiber + standalone CCH
 ```
 
 Useful targets: `make logs`, `make ps`, `make down`, `make pull`.
 
-Default Compose brings up a **local regtest LND** so the hub can start without an external Lightning node. Fiber/CCH are configured for **CKB testnet (Fibt)**. For real swaps, point `config/cch/config.yml` at a Bitcoin testnet (or mainnet) LND whose network matches your Fiber currency, fund cWBTC ([faucet](https://faucet-cwbtc.ckb.dev/)), and open channels.
+The stack runs **Fiber on CKB testnet (Fibt)** with **Bitcoin testnet LND** (Neutrino) so Lightning invoices match CCH currency. Neutrino sync can take a while before `synced_to_chain` is true and payments work — check with:
+
+```bash
+docker exec fiber-cch-hub-lnd lncli --network=testnet getinfo
+```
+
+If you previously ran the old regtest stack, remove `data/lnd` (and `data/bitcoind` if present) before `make up`. Next: fund cWBTC ([faucet](https://faucet-cwbtc.ckb.dev/)) and open Fiber channels for real swaps.
 
 ---
 

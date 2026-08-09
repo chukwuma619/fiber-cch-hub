@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Create the hub LND wallet (Bitcoin regtest) and sync creds into data/cch/lnd/.
+# Create the hub LND wallet (Bitcoin testnet) and sync creds into data/cch/lnd/.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -13,17 +13,15 @@ if [[ -f .env ]]; then
 fi
 
 PASSWORD="${LND_WALLET_PASSWORD:-change-me-lnd}"
-NETWORK=regtest
+NETWORK=testnet
 
-mkdir -p data/lnd data/bitcoind
+if [[ -d data/lnd/data/chain/bitcoin/regtest ]]; then
+  echo "FAIL found regtest LND data in data/lnd."
+  echo "Remove data/lnd (and obsolete data/bitcoind if present), then re-run: make up"
+  exit 1
+fi
 
-btccli() {
-  docker exec fiber-cch-hub-bitcoind bitcoin-cli \
-    -regtest \
-    -rpcuser=fiber \
-    -rpcpassword=fiber \
-    "$@"
-}
+mkdir -p data/lnd
 
 lncli() {
   docker exec fiber-cch-hub-lnd lncli \
@@ -60,6 +58,7 @@ ensure_wallet() {
     sleep 2
     if lncli getinfo >/dev/null 2>&1; then
       echo "OK   LND unlocked"
+      lncli getinfo | jq '{identity_pubkey, synced_to_chain, block_height}'
       return 0
     fi
   fi
@@ -86,34 +85,11 @@ ensure_wallet() {
   return 1
 }
 
-echo "Starting bitcoind + LND..."
-docker compose up -d bitcoind
-for i in $(seq 1 60); do
-  if docker compose ps bitcoind 2>/dev/null | grep -q healthy; then
-    break
-  fi
-  sleep 2
-done
-
-if ! btccli getwalletinfo >/dev/null 2>&1; then
-  btccli createwallet "cch" >/dev/null || btccli loadwallet "cch" >/dev/null || true
-fi
-HEIGHT=$(btccli getblockcount)
-if [[ "$HEIGHT" -lt 101 ]]; then
-  echo "Mining 101 regtest blocks..."
-  ADDR=$(btccli getnewaddress)
-  btccli generatetoaddress $((101 - HEIGHT)) "$ADDR" >/dev/null
-fi
-echo "bitcoind height=$(btccli getblockcount)"
-
-docker compose up -d lnd
+echo "Starting Bitcoin testnet LND (Neutrino)..."
+docker compose up -d --remove-orphans lnd
 ensure_wallet
 
-ADDR=$(btccli getnewaddress)
-btccli generatetoaddress 6 "$ADDR" >/dev/null
-sleep 2
-
-MAC=data/lnd/data/chain/bitcoin/regtest/admin.macaroon
+MAC=data/lnd/data/chain/bitcoin/testnet/admin.macaroon
 CERT=data/lnd/tls.cert
 if [[ ! -f "$MAC" || ! -f "$CERT" ]]; then
   echo "FAIL missing LND creds at $CERT / $MAC"
@@ -127,3 +103,4 @@ cp "$MAC" data/cch/lnd/admin.macaroon
 chmod 644 data/cch/lnd/tls.cert data/cch/lnd/admin.macaroon
 
 echo "LND init complete (creds synced to data/cch/lnd/)."
+echo "NOTE Neutrino sync may take a while; check: docker exec fiber-cch-hub-lnd lncli --network=testnet getinfo"

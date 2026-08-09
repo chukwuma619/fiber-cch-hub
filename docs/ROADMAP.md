@@ -4,13 +4,13 @@ Operator hub around upstream Fiber standalone CCH (`nervos/fiber` via Docker). D
 
 ## Done
 
-- [x] Pin Fiber image; Compose stack: Fiber + standalone CCH + local regtest LND
+- [x] Pin Fiber image; Compose stack: Fiber + standalone CCH + Bitcoin testnet LND (Neutrino)
 - [x] Configs for Fiber testnet (Fibt) and cWBTC Script
 - [x] `make up` / `make down` bootstrap path
+- [x] Point LND at Bitcoin testnet (matches Fibt)
 
 ## Next
 
-- [ ] Point LND at Bitcoin testnet/mainnet for real swaps (network must match Fiber currency)
 - [ ] Fund cWBTC + open Fiber channels ([faucet guide](https://faucet-cwbtc.ckb.dev/guide.html))
 - [ ] Prove `send_btc` / `receive_btc` to `Success` on testnet
 - [ ] Operator hardening: RPC auth, backups, monitoring, mainnet checklist

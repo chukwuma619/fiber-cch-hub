@@ -10,12 +10,11 @@ if [[ ! -f .env ]]; then
   echo "Created .env from .env.example — edit secrets before production use."
 fi
 
-mkdir -p data/fiber/ckb data/cch data/lnd data/bitcoind
+mkdir -p data/fiber/ckb data/cch data/lnd
 
 # Sync tracked configs into runtime data dirs (single volume mount per container).
 cp config/fiber/config.yml data/fiber/config.yml
 cp config/cch/config.yml data/cch/config.yml
-cp config/bitcoind/bitcoin.conf data/bitcoind/bitcoin.conf
 
 KEY_PATH="data/fiber/ckb/key"
 if [[ ! -f "$KEY_PATH" ]]; then
