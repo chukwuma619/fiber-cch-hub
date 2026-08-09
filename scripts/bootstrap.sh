@@ -7,7 +7,8 @@ cd "$ROOT"
 
 if [[ ! -f .env ]]; then
   cp .env.example .env
-  echo "Created .env from .env.example — edit secrets before production use."
+  echo "Created .env from .env.example — edit passwords, then run: make up"
+  echo "Walkthrough: GETTING-STARTED.md"
 fi
 
 mkdir -p data/fiber/ckb data/cch data/lnd

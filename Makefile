@@ -3,6 +3,8 @@
 help:
 	@echo "Fiber CCH Hub"
 	@echo ""
+	@echo "  First time?  See GETTING-STARTED.md"
+	@echo ""
 	@echo "  make doctor     Check Docker / curl / jq + Fiber image"
 	@echo "  make bootstrap  .env, data dirs, configs, CKB key"
 	@echo "  make up         Start Bitcoin testnet LND + Fiber + CCH"
