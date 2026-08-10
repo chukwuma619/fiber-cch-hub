@@ -72,12 +72,18 @@ fi
 
 # --- Lightning wallet ---
 echo ""
+SEED_FILE="data/lnd/cipher-seed.txt"
 if [[ -f "$MAC_PATH" ]]; then
   echo "OK   LND wallet already exists — syncing CCH credentials..."
   ./scripts/lnd-wallet.sh sync
+  if [[ ! -f "$SEED_FILE" ]]; then
+    echo ""
+    echo "WARNING: no seed file at $SEED_FILE (wallet was created without saving one)."
+    echo "To mint a new wallet and print 24 words:"
+    echo "  make down && rm -rf data/lnd && make create-keys"
+  fi
 else
   echo "Creating Lightning wallet (Bitcoin testnet)..."
-  echo "WRITE DOWN the 24-word seed when it appears — you need it to recover funds."
   echo ""
   ./scripts/lnd-wallet.sh create
 fi

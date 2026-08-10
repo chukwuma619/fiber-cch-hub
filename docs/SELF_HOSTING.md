@@ -84,9 +84,15 @@ What it does:
 3. Prints your CKB address if `ckb-cli` is installed  
 4. Starts LND and creates a Lightning wallet if missing  
 
-**Write down the 24-word LND seed** when it appears. You need it to recover Lightning funds.
+**Write down the 24-word LND seed** when it appears (numbered list). It is also saved to `data/lnd/cipher-seed.txt` — back that up offline, then delete the file if you prefer.
 
-If keys already exist, `make create-keys` leaves the Fiber key alone and only unlocks / syncs LND.
+If keys already exist, `make create-keys` leaves the Fiber key alone and only unlocks / syncs LND. **LND cannot show an old seed again** — if you never saved it, wipe and recreate:
+
+```bash
+make down
+rm -rf data/lnd
+make create-keys
+```
 
 ### Manual Fiber key (optional)
 

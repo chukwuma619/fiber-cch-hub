@@ -48,7 +48,6 @@ services:
       - --rpclisten=0.0.0.0:10009
       - --restlisten=0.0.0.0:8080
       - --listen=0.0.0.0:9735
-      - --noseedbackup
       - --accept-keysend
       - --protocol.wumbo-channels
     ports:
