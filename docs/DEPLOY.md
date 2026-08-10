@@ -12,7 +12,7 @@ Put the hub on a server so it runs 24/7.
 
 | Piece | Default (local / VPS) |
 | --- | --- |
-| Fiber node | P2P port **8228**, RPC **8227** (keep RPC private) |
+| Fiber node | P2P port **8428**, RPC **8427** (keep RPC private) |
 | LND | Bitcoin testnet, P2P **9735**, RPC **10009** (keep private) |
 | CCH | RPC **8327** (keep private) |
 
@@ -33,10 +33,10 @@ Firewall (minimum for testnet):
 | Port | Why |
 | --- | --- |
 | **22** | SSH |
-| **8228/tcp** | Fiber P2P (if you want inbound peers) |
+| **8428/tcp** | Fiber P2P (if you want inbound peers) |
 | **9735/tcp** | Lightning P2P (optional) |
 
-Do **not** expose Fiber RPC **8227**, CCH **8327**, or LND **10009** to the public internet. Use SSH tunnels or a VPN for admin access.
+Do **not** expose Fiber RPC **8427**, CCH **8327**, or LND **10009** to the public internet. Use SSH tunnels or a VPN for admin access.
 
 ---
 
@@ -115,7 +115,7 @@ Example in `config/fiber/config.yml`:
 ```yaml
 fiber:
   announced_addrs:
-    - "/ip4/203.0.113.10/tcp/8228"
+    - "/ip4/203.0.113.10/tcp/8428"
 ```
 
 Then `make bootstrap && make down && ./start.sh`.
@@ -167,7 +167,7 @@ Before upgrading the Fiber image: back up `./data`, close channels if on mainnet
 | --- | --- |
 | `Missing CKB private key` | Run `make create-keys` — [SELF_HOSTING.md](SELF_HOSTING.md) |
 | `Missing LND wallet` | `make create-keys` on the server |
-| Peers cannot reach Fiber | Open **8228**, set `announced_addrs`, restart |
+| Peers cannot reach Fiber | Open **8428**, set `announced_addrs`, restart |
 | Wallet corrupt after copying | Stop local hub first; never run two copies of same `data/` |
 
 ---

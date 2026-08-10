@@ -38,12 +38,19 @@ if [[ ! -f "$KEY_PATH" ]]; then
   echo "Run: make create-keys   (or docs/SELF_HOSTING.md)"
   fail=1
 else
-  key_line=$(tr -d '[:space:]' <"$KEY_PATH")
+  # After first Fiber start the key is encrypted (binary). Plaintext is 64 hex chars.
+  # LC_ALL=C avoids macOS `tr: Illegal byte sequence` on encrypted keys.
+  key_line=$(LC_ALL=C tr -d '[:space:]' <"$KEY_PATH" 2>/dev/null || true)
   if [[ "$key_line" == 0x* ]]; then
     key_line="${key_line#0x}"
   fi
-  if [[ ! "$key_line" =~ ^[0-9a-fA-F]{64}$ ]]; then
-    echo "FAIL $KEY_PATH must be one line, 64 hex characters (no 0x prefix)."
+  if [[ "$key_line" =~ ^[0-9a-fA-F]{64}$ ]]; then
+    : # plaintext hex — ok
+  elif [[ -s "$KEY_PATH" ]]; then
+    : # non-empty non-hex → treat as Fiber-encrypted key (needs FIBER_SECRET_KEY_PASSWORD)
+  else
+    echo "FAIL $KEY_PATH is empty."
+    echo "Run: make create-keys   (or docs/SELF_HOSTING.md)"
     fail=1
   fi
 fi

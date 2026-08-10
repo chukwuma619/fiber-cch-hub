@@ -124,9 +124,9 @@ docker exec fiber-cch-hub-lnd lncli --network=testnet getinfo
 
 | Port (local) | Service |
 | --- | --- |
-| **8227** | Fiber RPC |
+| **8427** | Fiber RPC |
 | **8327** | CCH RPC |
-| **8228** | Fiber P2P |
+| **8428** | Fiber P2P |
 | **10009** | LND RPC |
 
 **LND sync:** `"synced_to_chain": true` may take 30+ minutes on first run. The hub can start before sync finishes; Lightning payments need sync.

@@ -35,7 +35,7 @@ make create-keys              # Fiber key + Lightning wallet (save the seed!)
 
 | URL (local) | Service |
 | --- | --- |
-| http://127.0.0.1:8227 | Fiber RPC |
+| http://127.0.0.1:8427 | Fiber RPC |
 | http://127.0.0.1:8327 | CCH RPC |
 
 ---

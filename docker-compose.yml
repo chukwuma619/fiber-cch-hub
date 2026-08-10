@@ -10,8 +10,8 @@ services:
     volumes:
       - ./data/fiber:/fiber
     ports:
-      - "${FIBER_P2P_PORT:-8228}:8228"
-      - "${FIBER_RPC_PORT:-8227}:8227"
+      - "${FIBER_P2P_PORT:-8428}:8228"
+      - "${FIBER_RPC_PORT:-8427}:8227"
     networks:
       hub:
         ipv4_address: 172.30.0.10

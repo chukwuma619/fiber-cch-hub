@@ -32,6 +32,6 @@ if [[ -f .env ]]; then
   set +a
 fi
 
-echo "Fiber RPC: http://127.0.0.1:${FIBER_RPC_PORT:-8227}"
+echo "Fiber RPC: http://127.0.0.1:${FIBER_RPC_PORT:-8427}"
 echo "CCH RPC:   http://127.0.0.1:${CCH_RPC_PORT:-8327}"
 echo "Logs: docker compose logs -f"
